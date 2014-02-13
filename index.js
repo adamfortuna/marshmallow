@@ -21,57 +21,36 @@ app.controller("RecorderController", function($scope) {
   }
 
   // Saves a single change in the editor
-  $scope.logChange = function(change) {
+  $scope.logChange = function(content, cursor) {
     if(!$scope.isRecording) { return false; }
-    console.log('saving change...')
+    console.log('saving content...')
     $scope.changes.push({
       time: new Date(),
-      diff: change
+      content: content,
+      cursor: cursor
     });
   }
 
   // Plays a recording
   $scope.play = function() {
-    var startTime = new Date(),
-        lines = [],
-        time,
-        changes,
-        newChar,
-        currentPos;
-
+    var time;
     $scope.isPlaying = true;
     $scope.isPaused = false;
 
+    // Todo: Make the editor readonly.
+
     // Setup the initial state of the editor when the recording started
     $scope.editor.setValue($scope.startingCode);
-    $scope.editor.eachLine(function(line) {
-      lines.push(line.text);
-    });
 
     _.each($scope.changes, function(change) {
-      changes = change.diff.text
-      newChar = change.diff.text[0];
-      currentPos = change.diff.from;
       time = change.time - $scope.startingTime;
 
-      if(changes.length > 1) {
-        // New line
-        lines.push(newChar);
-      } else if(lines[currentPos.line].length <= currentPos.ch) {
-        // New Character
-        lines[currentPos.line] = lines[currentPos.line].concat(newChar)
-      }
-
       // Set the new line on the editor
-      setTimeout(function(line, text) {
-        if(line > $scope.editor.lineCount()-1) {
-          console.log("Adding a new line.");
-          $scope.editor.setValue($scope.editor.getValue() + "\n");
-        } else {
-          console.log("Setting line "+ line + " to " + text);
-          $scope.editor.setLine(line, text);
-        }
-      }.bind(this, currentPos.line, lines[currentPos.line]), time)
+      setTimeout(function(editor, content, cursor) {
+        editor.setValue(content);
+        editor.setCursor(cursor);
+
+      }.bind(this, $scope.editor, change.content, change.cursor), time)
     });
   }
 
@@ -98,7 +77,7 @@ app.directive('editor', function() {
       });
 
       scope.editor.on('change', function(cm, change) {
-        scope.logChange(change);
+        scope.logChange(cm.getValue(), change.from);
       });
     }
   }
