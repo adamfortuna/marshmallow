@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Marshmallow Recorder</title>
+    <link rel='stylesheet' href='index.css' />
+    <link rel='stylesheet' href='bower_components/codemirror/lib/codemirror.css' />
+  </head>
+  <body>
+    <div ng-app='marshmallow'>
+      <div ng-controller='RecorderController as ctrl'>
+
+        <div id='controls' ng-class="{'has-recording': hasRecording, 'is-recording': isRecording, 'is-playing': isPlaying, 'is-paused': isPaused}">
+          <button id='record' ng-click='record()'>Record</button>
+          <button id='stop' ng-click='stopRecording()'>Stop</button>
+          <button id='play' ng-click='play()'>Play</button>
+          <button id='pause' ng-click='pause()'>Pause</button>
+        </div>
+
+        <editor></editor>
+      </div>
+    </div>
+
+    <!-- lots of scripts -->
+    <script src='bower_components/angular/angular.js'></script>
+    <script src='bower_components/codemirror/lib/codemirror.js'></script>
+    <script src='bower_components/codemirror/mode/javascript/javascript.js'></script>
+    <script src='bower_components/lodash/dist/lodash.js'></script>
+    <script src='index.js'></script>
+    <script type='text/javascript' id='lt_ws' src='http://localhost:64379/socket.io/lighttable/ws.js'></script>
+  </body>
+</html>

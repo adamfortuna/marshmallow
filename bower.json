@@ -1,0 +1,29 @@
+{
+  "name": "marshmallow",
+  "version": "0.0.0",
+  "authors": [
+    "Adam Fortuna <adam@fortuna.name>"
+  ],
+  "description": "Code recording and playback example.",
+  "main": "index.js",
+  "keywords": [
+    "editor",
+    "code",
+    "video",
+    "audio"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/adamfortuna/marshmallow",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "1.2.12",
+    "codemirror": "3.21.0",
+    "lodash": "2.4.1"
+  }
+}
