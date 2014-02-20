@@ -1,61 +1,153 @@
 var app = angular.module("marshmallow", []);
 
-app.controller("RecorderController", function($scope) {
-
-  // Starts a recording
-  $scope.record = function() {
-    console.log('Recording...');
-    $scope.startingTime = new Date();
-    $scope.changes = [];
-    $scope.editor.clearHistory();
-    $scope.isRecording = true;
+app.directive('recorder', function() {
+  return {
+    restrict: 'E',
+    template: 
+      '<controls editor="editor"></controls>' +
+      '<editor editor="editor"></editor>'
   }
+});
 
-   // Stop the active recording
-  $scope.stopRecording = function() {
-    $scope.isRecording = false;
-    $scope.hasRecording = true;
-  }
-
-  // Saves a single change in the editor
-  $scope.logChange = function(content, cursor) {
-    if(!$scope.isRecording) { return false; }
-    $scope.changes.push(new Date()-$scope.startingTime);
-  }
-
-  // Plays a recording
-  $scope.play = function() {
-    var time;
-    $scope.isPlaying = true;
-    $scope.isPaused = false;
-
-    // Rewind the editor history back to the beginning
-    for(var i=0, length=$scope.editor.historySize().undo; i<length; i++) {
-      $scope.editor.undo();
+app.directive('controls', function() {
+  return {
+    restrict: 'E',
+    replace: true,
+    scope: {
+      editor: '='
+    },
+    template:
+      "<div id='controls' class='is-{{status}}'>" +
+      "  <record editor='editor' changes='changes' starting-time='startingTime' status='status'></record>" +
+      "  <play editor='editor' changes='changes' starting-time='startingTime' status='status'></play>" +
+      "</div>",
+    controller: function($scope) {
+      $scope.status = 'unrecoded';
+      $scope.startingTime = null;
     }
-
-
-    // Todo: Make the editor readonly.
-   _.each($scope.changes, function(change) {
-     setTimeout(function(editor) {
-       editor.redo();
-     }.bind(this, $scope.editor), change);
-   });
   }
+});
 
-  // Pauses playing a recording
-  $scope.pause = function() {
-    $scope.isPlaying = false;
-    $scope.isPaused = true;
+app.directive('record', function() {
+  return {
+    restrict: 'E',
+    replace: true,
+    scope: {
+      editor: '=',
+      changes: '=',
+      startingTime: '=',
+      status: '=',
+    },
+    template:
+      "<div>" +
+      "  <button id='record' ng-click='record()'>Record</button>" + 
+      "  <button id='stop' ng-click='stop()'>Stop</button>" + 
+      "</div>",
+    link: function(scope, element, attr) {
+      var logChanges = function() {
+        console.log("logging change");
+        scope.changes.push(new Date() - scope.startingTime);
+      };
+
+      scope.record = function() {
+        console.log('recording');
+        scope.editor.clearHistory();
+        scope.startingTime = new Date();
+        scope.status = "recording";
+        scope.changes = [];
+
+        scope.editor.on('change', logChanges);
+      }
+
+      scope.stop = function() {
+        console.log('stopping');
+        scope.status = "stopped";
+        scope.editor.off('change', logChanges);
+      }
+    }
+  }
+});
+
+app.directive('play', function() {
+  return {
+    restrict: 'E',
+    replace: true,
+    scope: {
+      editor: '=',
+      changes: '=',
+      startingTime: '=',
+      status: '=',
+    },
+    template:
+      "<div>" +
+      "  <button id='play' ng-click='play()'>Play</button>" +
+      "  <button id='pause' ng-click='pause()'>Pause</button>" +
+      "</div>",
+
+    link: function(scope, element, attr) {
+
+      // Plays the passed in step at the appropriate time
+      scope.playNext = function(changes, lastTime, step) {
+        lastTime = lastTime || 0;
+        step = step || 0;
+        if(scope.status !== 'playing') {
+          return true;
+        } else if (changes.length === 0) {
+          scope.status = 'stopped'
+          scope.$apply();
+          return true;
+        }
+
+        scope.step = step;
+        var nextChangeTime = changes.shift(),
+            timeUntilNextChange = nextChangeTime - lastTime;
+
+        setTimeout(function() {
+          scope.editor.redo();
+          scope.step = step;
+          scope.playNext(changes, nextChangeTime, step);
+        }, timeUntilNextChange);
+      };
+
+      scope.pause = function() {
+        console.log('pause');
+        scope.status = "paused";
+      }
+
+      scope.play = function() {
+        var changes;
+        console.log('playing')
+
+        if(scope.status === 'paused') {
+          changes = scope.changes.slice(scope.step, scope.changes.length)
+        } else {
+          // Rewind the editor history back to the beginning
+          for(var i=0, length=scope.editor.historySize().undo; i<length; i++) {
+            scope.editor.undo();
+          }
+
+          // Kickoff playing all of the changes
+          scope.step = 0;
+          changes = scope.changes.slice(0);
+        }    
+
+        scope.status = 'playing';
+        scope.playNext(changes);
+      }
+    }
   }
 });
 
 app.directive('editor', function() {
   return {
     restrict: "E",
+    replace: true,
     template: "<div id='editor'></div>",
+    scope: {
+      editor: '='
+    },
     link: function(scope, element, attrs) {
-      scope.editor = CodeMirror(element.find('div')[0], {
+      scope.editor = CodeMirror(element[0], {
         indentUnit: 2,
         tabSize: 2,
         theme: 'vibrant-ink',
@@ -64,10 +156,6 @@ app.directive('editor', function() {
         gutters: ["CodeMirror-foldgutter"],
         syntax: 'javascript',
         historyEventDelay: 50
-      });
-
-      scope.editor.on('change', function() {
-        scope.logChange();
       });
     }
   }

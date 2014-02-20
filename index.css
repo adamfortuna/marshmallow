@@ -38,19 +38,24 @@ body {
 
 
 /* with a recording */
-.has-recording #play {
-  display: inline-block;
-}
-.has-recording.is-playing #play, .has-recording.is-playing #record {
-  display: none;
-}
-.has-recording.is-playing #pause {
-  display: inline-block;
-}
-.has-recording.is-paused #play {
+.is-stopped #play {
   display: inline-block;
 }
 
+.is-playing #play, .is-playing #record, .is-playing #stop {
+  display: none;
+}
+.is-playing #pause {
+  display: inline-block;
+}
+
+/* Playing a recording */
+.is-paused #play {
+  display: inline-block;
+}
+.is-paused #pause, .is-paused #record, .is-paused #stop {
+  display: none;
+}
 
 .CodeMirror {
   background-color: #2b2b2b !important;
