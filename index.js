@@ -18,12 +18,11 @@ app.directive('controls', function() {
     },
     template:
       "<div id='controls' class='is-{{status}}'>" +
-      "  <record editor='editor' changes='changes' starting-time='startingTime' status='status'></record>" +
-      "  <play editor='editor' changes='changes' starting-time='startingTime' status='status'></play>" +
+      "  <record editor='editor' changes='changes' status='status'></record>" +
+      "  <play editor='editor' changes='changes' status='status'></play>" +
       "</div>",
     controller: function($scope) {
       $scope.status = 'unrecoded';
-      $scope.startingTime = null;
     }
   }
 });
@@ -35,7 +34,6 @@ app.directive('record', function() {
     scope: {
       editor: '=',
       changes: '=',
-      startingTime: '=',
       status: '=',
     },
     template:
@@ -75,7 +73,6 @@ app.directive('play', function() {
     scope: {
       editor: '=',
       changes: '=',
-      startingTime: '=',
       status: '=',
     },
     template:
@@ -109,11 +106,6 @@ app.directive('play', function() {
         }, timeUntilNextChange);
       };
 
-      scope.pause = function() {
-        console.log('pause');
-        scope.status = "paused";
-      }
-
       scope.play = function() {
         var changes;
         console.log('playing')
@@ -133,6 +125,11 @@ app.directive('play', function() {
 
         scope.status = 'playing';
         scope.playNext(changes);
+      }
+
+      scope.pause = function() {
+        console.log('pause');
+        scope.status = "paused";
       }
     }
   }
